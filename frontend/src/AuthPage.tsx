@@ -43,12 +43,8 @@ const AuthPage: React.FC = () => {
     // Simulate API call with timeout
     setTimeout(() => {
       setLoading(false);
-      if (mode === 'login') {
-        localStorage.setItem('isLoggedIn', 'true');
-        navigate('/dashboard');
-      } else {
-        navigate('/login');
-      }
+      localStorage.setItem('isLoggedIn', 'true');
+      window.location.href = '/dashboard'; // Redirect to dashboard for both login and signup
     }, 1000);
   };
 
