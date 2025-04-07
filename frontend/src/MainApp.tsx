@@ -12,6 +12,12 @@ interface PolymerResponse {
   smiles: string;
   has_kill_switch: boolean;
   degradability_score: number;
+  nomenclature?: {
+    name: string;
+    formula: string;
+    functional_groups: string[];
+    structure_type: string;
+  };
   visualization?: {
     atoms: Array<{
       symbol: string;
@@ -138,6 +144,29 @@ function MainApp() {
         >
           Molecule Information
         </motion.h3>
+        
+        {/* Nomenclature Section */}
+        {result.nomenclature && (
+          <motion.div 
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.3 }}
+            className="mb-6 p-4 bg-green-50 rounded-lg"
+          >
+            <h4 className="font-medium mb-3">Nomenclature</h4>
+            <div className="grid grid-cols-1 gap-2 text-sm">
+              <p><span className="font-medium">Name:</span> {result.nomenclature.name}</p>
+              <p><span className="font-medium">Formula:</span> {result.nomenclature.formula}</p>
+              <p><span className="font-medium">Structure Type:</span> {result.nomenclature.structure_type}</p>
+              <p>
+                <span className="font-medium">Functional Groups:</span>{' '}
+                {result.nomenclature.functional_groups.length > 0 
+                  ? result.nomenclature.functional_groups.join(', ')
+                  : 'None identified'}
+              </p>
+            </div>
+          </motion.div>
+        )}
         
         {/* Structure Visualization */}
         <motion.div 
@@ -270,7 +299,7 @@ function MainApp() {
           transition={{ duration: 0.5 }}
           className="text-3xl font-bold text-center text-gray-800 mb-8"
         >
-          AI Polymer System
+          AI Self‑Decomposing Polymers
         </motion.h1>
         
         <div className="flex flex-col lg:flex-row gap-6">

@@ -176,4 +176,81 @@ class PolymerGenerator:
             "num_rotatable_bonds": Descriptors.NumRotatableBonds(mol),
             "num_h_donors": Descriptors.NumHDonors(mol),
             "num_h_acceptors": Descriptors.NumHAcceptors(mol)
+        }
+        
+    def generate_nomenclature(self, smiles: str, domain: str) -> Dict[str, Any]:
+        """
+        Generate systematic nomenclature for a polymer based on its structure.
+        
+        Args:
+            smiles: SMILES string of the polymer
+            domain: The domain for which the polymer was generated
+            
+        Returns:
+            Dictionary containing nomenclature data
+        """
+        mol = Chem.MolFromSmiles(smiles)
+        if mol is None:
+            return {
+                "name": "Unknown Polymer",
+                "formula": "Unknown",
+                "functional_groups": [],
+                "structure_type": "Unknown"
+            }
+        
+        # Identify functional groups
+        functional_groups = []
+        for group_name, group_smarts in self.kill_switch_groups.items():
+            pattern = Chem.MolFromSmarts(group_smarts)
+            if mol.HasSubstructMatch(pattern):
+                functional_groups.append(group_name)
+        
+        # Check for rings to determine structure type
+        ring_info = Chem.GetSymmSSSR(mol)
+        num_rings = len(ring_info) if ring_info else 0
+        structure_type = "Cyclic" if num_rings > 0 else "Linear"
+        
+        # Generate molecular formula
+        atom_counts = {}
+        for atom in mol.GetAtoms():
+            symbol = atom.GetSymbol()
+            atom_counts[symbol] = atom_counts.get(symbol, 0) + 1
+        
+        # Order by C, H, and then alphabetically
+        formula_parts = []
+        if 'C' in atom_counts:
+            formula_parts.append(f"C{atom_counts['C'] if atom_counts['C'] > 1 else ''}")
+            del atom_counts['C']
+        if 'H' in atom_counts:
+            formula_parts.append(f"H{atom_counts['H'] if atom_counts['H'] > 1 else ''}")
+            del atom_counts['H']
+        
+        # Add remaining elements alphabetically
+        for symbol in sorted(atom_counts.keys()):
+            formula_parts.append(f"{symbol}{atom_counts[symbol] if atom_counts[symbol] > 1 else ''}")
+        
+        formula = ''.join(formula_parts)
+        
+        # Generate systematic name
+        domain_prefix = {
+            'agriculture': 'Agro',
+            'water': 'Hydro',
+            'urban': 'Urbo'
+        }.get(domain, '')
+        
+        # Generate base name from functional groups
+        if not functional_groups:
+            base_name = "polymer"
+        elif len(functional_groups) == 1:
+            base_name = f"poly{functional_groups[0]}"
+        else:
+            base_name = 'poly' + '-co-'.join(functional_groups)
+        
+        systematic_name = f"{domain_prefix}{structure_type.lower()}-{base_name}"
+        
+        return {
+            "name": systematic_name,
+            "formula": formula,
+            "functional_groups": functional_groups,
+            "structure_type": structure_type
         } 

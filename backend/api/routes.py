@@ -5,7 +5,7 @@ from pathlib import Path
 
 from models.polymer_generator import PolymerGenerator
 from models.gnn_model import DegradabilityPredictor
-from schemas.polymer import PolymerRequest, PolymerResponse, PredictionRequest
+from schemas.polymer import PolymerRequest, PolymerResponse, PredictionRequest, NomenclatureData
 
 router = APIRouter()
 generator = PolymerGenerator()
@@ -31,12 +31,21 @@ async def generate_polymer(request: PolymerRequest):
         # Get molecule properties for visualization
         molecule_properties = generator.get_molecule_properties(smiles)
         
+        # Generate nomenclature data
+        nomenclature_data = generator.generate_nomenclature(smiles, request.domain)
+        
         # Create response
         response = PolymerResponse(
             smiles=smiles,
             has_kill_switch=has_kill_switch,
             degradability_score=degradability_score,
-            visualization=molecule_properties
+            visualization=molecule_properties,
+            nomenclature=NomenclatureData(
+                name=nomenclature_data["name"],
+                formula=nomenclature_data["formula"],
+                functional_groups=nomenclature_data["functional_groups"],
+                structure_type=nomenclature_data["structure_type"]
+            )
         )
         
         # Save to history
