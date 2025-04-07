@@ -5,31 +5,50 @@ from rdkit.Chem import AllChem
 import json
 from pathlib import Path
 import random
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class PolymerDataGenerator:
     def __init__(self):
         self.kill_switch_groups = {
+            # Existing groups
             "ester": "C(=O)O",
             "amide": "C(=O)N",
             "azide": "N=N=N",
             "peroxide": "OO",
             "thiol": "S",
-            "photolabile": "C(=O)C"
+            "photolabile": "C(=O)C",
+            
+            # New additions
+            "anhydride": "C(=O)OC(=O)",
+            "carbonate": "OC(=O)O",
+            "oxalate": "OC(=O)C(=O)O",
+            "acetal": "OCOC",
+            "disulfide": "SS",
+            "thioketal": "SCCS",
+            "hydrazone": "C=NNC",
+            "imine": "C=N",
+            "boronic_ester": "B(O)O",
+            "urethane": "NC(=O)O",
+            "urea": "NC(=O)N",
+            "siloxane": "OSiO"
         }
         
         self.domain_templates = {
             "agriculture": {
-                "groups": ["C(=O)O", "C(=O)N"],  # Ester and amide groups
-                "triggers": ["pH < 5", "temperature > 30", "microbial_presence"],
+                "groups": ["C(=O)O", "C(=O)N", "acetal", "hydrazone", "imine"],
+                "triggers": ["pH > 7", "temperature > 30", "microbial_presence"],
                 "base_structures": ["CCO", "CC(=O)O", "CC(=O)N"]
             },
             "water": {
-                "groups": ["S", "N=N=N"],  # Thiol and azide
+                "groups": ["S", "N=N=N", "anhydride", "carbonate", "disulfide"],
                 "triggers": ["pH > 8", "UV_light", "oxidation"],
                 "base_structures": ["CS", "CN=N=N", "CCO"]
             },
             "urban": {
-                "groups": ["C(=O)O", "OO"],  # Ester and peroxide
+                "groups": ["C(=O)O", "OO", "thioketal", "boronic_ester", "siloxane"],
                 "triggers": ["temperature > 40", "mechanical_stress", "moisture"],
                 "base_structures": ["CCO", "COO", "CC(=O)O"]
             }
@@ -40,7 +59,7 @@ class PolymerDataGenerator:
         base = random.choice(template["base_structures"])
         
         # Add random number of kill switch groups
-        num_groups = random.randint(1, 3)
+        num_groups = min(random.randint(1, 3), len(template["groups"]))
         groups = random.sample(template["groups"], num_groups)
         
         # Create polymer structure
@@ -110,23 +129,40 @@ class PolymerDataGenerator:
         return pd.DataFrame(data)
 
 def save_dataset(df: pd.DataFrame, output_dir: str = "data"):
-    Path(output_dir).mkdir(exist_ok=True)
-    
-    # Save as CSV
-    df.to_csv(f"{output_dir}/polymer_dataset.csv", index=False)
-    
-    # Save as JSON
-    df.to_json(f"{output_dir}/polymer_dataset.json", orient="records", indent=2)
-    
-    # Save training and test splits
-    train_size = int(0.8 * len(df))
-    train_df = df[:train_size]
-    test_df = df[train_size:]
-    
-    train_df.to_csv(f"{output_dir}/train.csv", index=False)
-    test_df.to_csv(f"{output_dir}/test.csv", index=False)
+    try:
+        Path(output_dir).mkdir(exist_ok=True)
+        logging.info(f"Directory '{output_dir}' created or already exists.")
+    except Exception as e:
+        logging.error(f"Failed to create directory '{output_dir}': {e}")
+        return
+
+    try:
+        # Save as CSV
+        df.to_csv(f"{output_dir}/polymer_dataset.csv", index=False)
+        logging.info("CSV file saved successfully.")
+    except Exception as e:
+        logging.error(f"Failed to save CSV file: {e}")
+
+    try:
+        # Save as JSON
+        df.to_json(f"{output_dir}/polymer_dataset.json", orient="records", indent=2)
+        logging.info("JSON file saved successfully.")
+    except Exception as e:
+        logging.error(f"Failed to save JSON file: {e}")
+
+    try:
+        # Save training and test splits
+        train_size = int(0.8 * len(df))
+        train_df = df[:train_size]
+        test_df = df[train_size:]
+
+        train_df.to_csv(f"{output_dir}/train.csv", index=False)
+        test_df.to_csv(f"{output_dir}/test.csv", index=False)
+        logging.info("Training and test CSV files saved successfully.")
+    except Exception as e:
+        logging.error(f"Failed to save training/test CSV files: {e}")
 
 if __name__ == "__main__":
     generator = PolymerDataGenerator()
     dataset = generator.generate_dataset(num_samples=1000)
-    save_dataset(dataset) 
+    save_dataset(dataset)

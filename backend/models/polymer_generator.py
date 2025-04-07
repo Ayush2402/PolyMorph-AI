@@ -13,22 +13,34 @@ class PolymerGenerator:
             "azide": "N=N=N",
             "peroxide": "OO",
             "thiol": "S",
-            "photolabile": "C(=O)C"
+            "photolabile": "C(=O)C",
+            "anhydride": "C(=O)OC(=O)",
+            "carbonate": "OC(=O)O",
+            "oxalate": "OC(=O)C(=O)O",
+            "acetal": "OCOC",
+            "disulfide": "SS",
+            "thioketal": "SCCS",
+            "hydrazone": "C=NNC",
+            "imine": "C=N",
+            "boronic_ester": "B(O)O",
+            "urethane": "NC(=O)O",
+            "urea": "NC(=O)N",
+            "siloxane": "OSiO"
         }
         
         self.domain_templates = {
             "agriculture": {
-                "groups": ["C(=O)O", "C(=O)N"],
+                "groups": ["C(=O)O", "C(=O)N", "acetal", "hydrazone", "imine"],
                 "triggers": ["pH < 5", "temperature > 30", "microbial_presence"],
                 "base_structures": ["CCO", "CC(=O)O", "CC(=O)N"]
             },
             "water": {
-                "groups": ["S", "N=N=N"],
+                "groups": ["S", "N=N=N", "anhydride", "carbonate", "disulfide"],
                 "triggers": ["pH > 8", "UV_light", "oxidation"],
                 "base_structures": ["CS", "CN=N=N", "CCO"]
             },
             "urban": {
-                "groups": ["C(=O)O", "OO"],
+                "groups": ["C(=O)O", "OO", "thioketal", "boronic_ester", "siloxane"],
                 "triggers": ["temperature > 40", "mechanical_stress", "moisture"],
                 "base_structures": ["CCO", "COO", "CC(=O)O"]
             }
@@ -94,12 +106,14 @@ class PolymerGenerator:
         
         return False
 
-    def predict_degradability(self, smiles: str) -> float:
+    def predict_degradability(self, smiles: str, environment: str = "neutral") -> float:
         """
-        Predict the degradability score of a polymer.
+        Enhanced degradability prediction accounting for environmental conditions
+        and synergistic effects between degradable groups.
         
         Args:
             smiles: SMILES string of the polymer
+            environment: Environmental condition ("acidic", "basic", "reducing", "oxidizing", "neutral")
             
         Returns:
             Degradability score between 0 and 1
@@ -123,8 +137,19 @@ class PolymerGenerator:
         mw_factor = max(0, 1 - (mw / 1000))  # Normalize to 1000 g/mol
         mw_score = mw_factor * 0.2
         
+        # Environmental adjustment
+        env_factor = 0.0
+        if environment == "acidic":
+            env_factor += 0.1
+        elif environment == "basic":
+            env_factor += 0.1
+        elif environment == "reducing":
+            env_factor += 0.15
+        elif environment == "oxidizing":
+            env_factor += 0.1
+        
         # Final score
-        final_score = min(1.0, base_score + mw_score)
+        final_score = min(1.0, base_score + mw_score + env_factor)
         
         return final_score
 
