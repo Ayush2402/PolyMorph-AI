@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import LoginPage from './LoginPage';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import MainApp from './MainApp';
+import AuthPage from './AuthPage';
+import LandingPage from './LandingPage';
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
@@ -30,34 +32,39 @@ function App() {
   }
 
   return (
-    <AnimatePresence mode="wait">
-      {isLoggedIn ? (
-        <motion.div
-          key="dashboard"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="relative"
-        >
-          <button 
-            onClick={handleLogout}
-            className="absolute top-4 right-4 bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors duration-300 z-10"
-          >
-            Logout
-          </button>
-          <MainApp />
-        </motion.div>
-      ) : (
-        <motion.div
-          key="login"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-        >
-          <LoginPage />
-        </motion.div>
-      )}
-    </AnimatePresence>
+    <Router>
+      <AnimatePresence mode="wait">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/signup" element={<AuthPage />} />
+          <Route
+            path="/dashboard"
+            element={
+              isLoggedIn ? (
+                <motion.div
+                  key="dashboard"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="relative"
+                >
+                  <button 
+                    onClick={handleLogout}
+                    className="absolute top-4 right-4 bg-red-100 text-red-600 px-4 py-2 rounded-lg hover:bg-red-200 transition-colors duration-300 z-10"
+                  >
+                    Logout
+                  </button>
+                  <MainApp />
+                </motion.div>
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+        </Routes>
+      </AnimatePresence>
+    </Router>
   );
 }
 
