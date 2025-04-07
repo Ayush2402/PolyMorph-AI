@@ -184,7 +184,7 @@ class PolymerDataGenerator:
                 
         return min(1.0, score)
 
-    def generate_dataset(self, num_samples: int = 1000) -> pd.DataFrame:
+    def generate_dataset(self, num_samples: int = 10000) -> pd.DataFrame:
         data = []
         domains = list(self.domain_templates.keys())
         
