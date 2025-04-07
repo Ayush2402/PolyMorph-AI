@@ -12,6 +12,7 @@ interface PolymerResponse {
   smiles: string;
   has_kill_switch: boolean;
   degradability_score: number;
+  synthesizability_score: number;
   nomenclature?: {
     name: string;
     formula: string;
@@ -459,19 +460,36 @@ function MainApp() {
                       transition={{ delay: 0.4 }}
                       className="p-3 bg-gray-50 rounded-lg"
                     >
-                      <div className="font-medium text-gray-700">Degradability Score</div>
-                      <div className="font-semibold mt-1">
-                        <span
-                          className={
-                            result.degradability_score > 0.7
-                              ? 'text-green-600'
-                              : result.degradability_score > 0.4
-                              ? 'text-yellow-600'
-                              : 'text-red-600'
-                          }
-                        >
-                          {(result.degradability_score * 100).toFixed(1)}%
-                        </span>
+                      <div className="font-medium text-gray-700">Scores</div>
+                      <div className="grid grid-cols-2 gap-2 mt-1">
+                        <div>
+                          <span className="text-sm text-gray-600">Degradability:</span>
+                          <div className="font-semibold">
+                            <span className={
+                              result.degradability_score > 0.7
+                                ? 'text-green-600'
+                                : result.degradability_score > 0.4
+                                ? 'text-yellow-600'
+                                : 'text-red-600'
+                            }>
+                              {(result.degradability_score * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Synthesizability:</span>
+                          <div className="font-semibold">
+                            <span className={
+                              result.synthesizability_score > 0.7
+                                ? 'text-green-600'
+                                : result.synthesizability_score > 0.4
+                                ? 'text-yellow-600'
+                                : 'text-red-600'
+                            }>
+                              {(result.synthesizability_score * 100).toFixed(1)}%
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </motion.div>
                   </div>

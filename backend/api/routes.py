@@ -24,9 +24,9 @@ async def generate_polymer(request: PolymerRequest):
         # Generate polymer
         smiles = generator.generate_polymer(request.domain, request.trigger_condition)
         
-        # Check for kill switch and predict degradability
+        # Check for kill switch and predict scores
         has_kill_switch = generator.check_kill_switch(smiles)
-        degradability_score = predictor.predict(smiles)
+        predictions = predictor.predict(smiles)
         
         # Get molecule properties for visualization
         molecule_properties = generator.get_molecule_properties(smiles)
@@ -38,7 +38,8 @@ async def generate_polymer(request: PolymerRequest):
         response = PolymerResponse(
             smiles=smiles,
             has_kill_switch=has_kill_switch,
-            degradability_score=degradability_score,
+            degradability_score=predictions["degradability"],
+            synthesizability_score=predictions["synthesizability"],
             visualization=molecule_properties,
             nomenclature=NomenclatureData(
                 name=nomenclature_data["name"],

@@ -21,6 +21,7 @@ class PolymerResponse(BaseModel):
     smiles: str = Field(..., description="SMILES representation of the polymer")
     has_kill_switch: bool = Field(..., description="Whether the polymer has a kill switch")
     degradability_score: float = Field(..., ge=0, le=1, description="Predicted degradability score")
+    synthesizability_score: float = Field(..., ge=0, le=1, description="Predicted synthesizability score")
     visualization: Optional[Dict[str, Any]] = Field(None, description="Molecule properties for visualization")
     nomenclature: Optional[NomenclatureData] = Field(None, description="Polymer nomenclature data")
 

@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from torch_geometric.nn import GCNConv, global_mean_pool
 from rdkit import Chem
 import numpy as np
+from rdkit.Chem import AllChem, Descriptors, rdMolDescriptors
 
 class DegradabilityGNN(torch.nn.Module):
     def __init__(self, num_node_features):
@@ -68,11 +69,68 @@ class DegradabilityPredictor:
             self.model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
         self.model.eval()
 
-    def predict(self, smiles):
+    def predict_degradability(self, smiles: str) -> float:
+        """
+        Predict the degradability score using the GNN model.
+        """
         graph = self.converter.convert(smiles)
         if graph is None:
             return 0.0
 
         with torch.no_grad():
             pred = self.model(graph['nodes'], graph['edges'], graph['batch'])
-            return float(pred[0]) 
+            return float(pred[0])
+
+    def predict_synthesizability(self, smiles: str) -> float:
+        """
+        Predict the synthesizability of a molecule based on its structural complexity.
+        Returns a score between 0 and 1, where 1 means easily synthesizable.
+        """
+        try:
+            mol = Chem.MolFromSmiles(smiles)
+            if mol is None:
+                return 0.0
+
+            # Calculate molecular descriptors
+            mw = Descriptors.ExactMolWt(mol)
+            rotatable_bonds = Descriptors.NumRotatableBonds(mol)
+            rings = rdMolDescriptors.CalcNumRings(mol)
+            stereo_centers = len(Chem.FindMolChiralCenters(mol))
+            
+            # Calculate sp3 carbon fraction manually
+            num_carbons = sum(1 for atom in mol.GetAtoms() if atom.GetSymbol() == 'C')
+            num_sp3_carbons = sum(1 for atom in mol.GetAtoms() 
+                                if atom.GetSymbol() == 'C' and atom.GetHybridization() == Chem.HybridizationType.SP3)
+            sp3_carbons = num_sp3_carbons / max(num_carbons, 1)  # Avoid division by zero
+            
+            # Normalize and combine factors
+            mw_score = np.clip(1.0 - (mw / 500.0), 0, 1)  # Penalize high molecular weight
+            complexity_score = np.clip(1.0 - (rings * 0.1 + stereo_centers * 0.15), 0, 1)  # Penalize complexity
+            flexibility_score = np.clip(1.0 - (rotatable_bonds * 0.05), 0, 1)  # Penalize high flexibility
+            sp3_score = sp3_carbons  # Higher sp3 fraction is generally easier to synthesize
+            
+            # Weighted combination of scores
+            synthesizability_score = (
+                0.3 * mw_score +
+                0.3 * complexity_score +
+                0.2 * flexibility_score +
+                0.2 * sp3_score
+            )
+            
+            return float(np.clip(synthesizability_score, 0, 1))
+            
+        except Exception as e:
+            print(f"Error calculating synthesizability: {e}")
+            return 0.0
+
+    def predict(self, smiles: str) -> dict:
+        """
+        Predict both degradability and synthesizability scores for a molecule.
+        """
+        degradability = self.predict_degradability(smiles)
+        synthesizability = self.predict_synthesizability(smiles)
+        
+        return {
+            "degradability": degradability,
+            "synthesizability": synthesizability
+        } 
