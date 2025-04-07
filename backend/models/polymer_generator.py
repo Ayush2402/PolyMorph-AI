@@ -7,42 +7,94 @@ import numpy as np
 
 class PolymerGenerator:
     def __init__(self):
+        # SMARTS patterns for matching
         self.kill_switch_groups = {
+            # Common degradable groups with valid SMARTS patterns
+            "ester": "[CX3](=O)[OX2H0]",  # C(=O)O
+            "amide": "[CX3](=O)[NX3]",    # C(=O)N
+            "acetal": "[OX2][CX4]([OX2])",  # OC(O)C
+            "hydrazone": "[CX3]=[NX2][NX3]",  # C=NN
+            "imine": "[CX3]=[NX2]",  # C=N
+            "thiol": "[SX2H]",  # SH
+            "azide": "[NX2]=[NX2]=[NX1]",  # N=N=N
+            "anhydride": "[CX3](=O)[OX2][CX3]=O",  # C(=O)OC(=O)
+            "carbonate": "[OX2][CX3](=O)[OX2]",  # OC(=O)O
+            "disulfide": "[SX2D2][SX2D2]",  # SS
+            "peroxide": "[OX2D2][OX2D2]",  # OO
+            "thioketal": "[SX2][CX4]([SX2])",  # SC(S)C
+            "boronic_ester": "[BX3]([OX2])[OX2]",  # B(O)O
+            "siloxane": "[OX2][Si][OX2]"  # OSiO
+        }
+        
+        # Simplified SMILES patterns for construction
+        self.construction_groups = {
             "ester": "C(=O)O",
             "amide": "C(=O)N",
+            "acetal": "OC(O)C",
+            "hydrazone": "C=NN",
+            "imine": "C=N",
+            "thiol": "SH",
             "azide": "N=N=N",
-            "peroxide": "OO",
-            "thiol": "S",
-            "photolabile": "C(=O)C",
             "anhydride": "C(=O)OC(=O)",
             "carbonate": "OC(=O)O",
-            "oxalate": "OC(=O)C(=O)O",
-            "acetal": "OCOC",
             "disulfide": "SS",
-            "thioketal": "SCCS",
-            "hydrazone": "C=NNC",
-            "imine": "C=N",
+            "peroxide": "OO",
+            "thioketal": "SC(S)C",
             "boronic_ester": "B(O)O",
-            "urethane": "NC(=O)O",
-            "urea": "NC(=O)N",
             "siloxane": "OSiO"
         }
         
         self.domain_templates = {
             "agriculture": {
-                "groups": ["C(=O)O", "C(=O)N", "acetal", "hydrazone", "imine"],
+                "groups": [
+                    self.construction_groups["ester"],
+                    self.construction_groups["amide"],
+                    self.construction_groups["acetal"],
+                    self.construction_groups["hydrazone"],
+                    self.construction_groups["imine"]
+                ],
                 "triggers": ["pH < 5", "temperature > 30", "microbial_presence"],
-                "base_structures": ["CCO", "CC(=O)O", "CC(=O)N"]
+                "base_structures": [
+                    "CCO",      # Simple alcohol
+                    "CC(=O)O",  # Carboxylic acid
+                    "CC(=O)N",  # Simple amide
+                    "CCOC",     # Ether
+                    "CC=O"      # Aldehyde
+                ]
             },
             "water": {
-                "groups": ["S", "N=N=N", "anhydride", "carbonate", "disulfide"],
+                "groups": [
+                    self.construction_groups["thiol"],
+                    self.construction_groups["azide"],
+                    self.construction_groups["anhydride"],
+                    self.construction_groups["carbonate"],
+                    self.construction_groups["disulfide"]
+                ],
                 "triggers": ["pH > 8", "UV_light", "oxidation"],
-                "base_structures": ["CS", "CN=N=N", "CCO"]
+                "base_structures": [
+                    "CS",       # Sulfide
+                    "CN=N=N",   # Azide derivative
+                    "CCO",      # Alcohol
+                    "CCOC",     # Ether
+                    "CSC"       # Thioether
+                ]
             },
             "urban": {
-                "groups": ["C(=O)O", "OO", "thioketal", "boronic_ester", "siloxane"],
+                "groups": [
+                    self.construction_groups["ester"],
+                    self.construction_groups["peroxide"],
+                    self.construction_groups["thioketal"],
+                    self.construction_groups["boronic_ester"],
+                    self.construction_groups["siloxane"]
+                ],
                 "triggers": ["temperature > 40", "mechanical_stress", "moisture"],
-                "base_structures": ["CCO", "COO", "CC(=O)O"]
+                "base_structures": [
+                    "CCO",      # Alcohol
+                    "COO",      # Peroxide
+                    "CC(=O)O",  # Carboxylic acid
+                    "CCOC",     # Ether
+                    "CC(C)O"    # Secondary alcohol
+                ]
             }
         }
 
@@ -67,23 +119,42 @@ class PolymerGenerator:
         num_groups = random.randint(1, 3)
         groups = random.sample(template["groups"], min(num_groups, len(template["groups"])))
         
-        # Create polymer structure
+        # Create polymer structure with proper connections
         structure = base
         for group in groups:
             if random.random() > 0.5:
-                structure += group
+                # Handle different connection cases
+                if structure.endswith('O') and group.startswith('C'):
+                    # Connect oxygen to carbon
+                    structure = structure + group
+                elif structure.endswith('N') and group.startswith('C'):
+                    # Connect nitrogen to carbon
+                    structure = structure + group
+                elif structure.endswith('C') and (group.startswith('O') or group.startswith('N') or group.startswith('S')):
+                    # Connect carbon to heteroatom
+                    structure = structure + group
+                elif structure.endswith('C') and group.startswith('C'):
+                    # Connect carbon to carbon, remove one carbon to avoid duplicates
+                    structure = structure[:-1] + group
+                else:
+                    # Default case: add a carbon linker
+                    structure = structure + 'C' + group
         
         # Ensure valid SMILES
         mol = Chem.MolFromSmiles(structure)
         if mol is None:
             return self.generate_polymer(domain, trigger_condition)
         
-        # Add hydrogens and clean up
-        mol = Chem.AddHs(mol)
-        AllChem.EmbedMolecule(mol)
-        AllChem.MMFFOptimizeMolecule(mol)
-        
-        return Chem.MolToSmiles(mol)
+        try:
+            # Add hydrogens and clean up
+            mol = Chem.AddHs(mol)
+            AllChem.EmbedMolecule(mol, randomSeed=42)  # Add seed for reproducibility
+            AllChem.MMFFOptimizeMolecule(mol)
+            
+            return Chem.MolToSmiles(mol)
+        except Exception as e:
+            # If embedding fails, try again with a new base
+            return self.generate_polymer(domain, trigger_condition)
 
     def check_kill_switch(self, smiles: str) -> bool:
         """
@@ -101,19 +172,17 @@ class PolymerGenerator:
         
         for group_name, group_smarts in self.kill_switch_groups.items():
             pattern = Chem.MolFromSmarts(group_smarts)
-            if mol.HasSubstructMatch(pattern):
+            if pattern is not None and mol.HasSubstructMatch(pattern):
                 return True
         
         return False
 
-    def predict_degradability(self, smiles: str, environment: str = "neutral") -> float:
+    def predict_degradability(self, smiles: str) -> float:
         """
-        Enhanced degradability prediction accounting for environmental conditions
-        and synergistic effects between degradable groups.
+        Predict the degradability score of a polymer.
         
         Args:
             smiles: SMILES string of the polymer
-            environment: Environmental condition ("acidic", "basic", "reducing", "oxidizing", "neutral")
             
         Returns:
             Degradability score between 0 and 1
@@ -126,8 +195,9 @@ class PolymerGenerator:
         degradable_count = 0
         for group_smarts in self.kill_switch_groups.values():
             pattern = Chem.MolFromSmarts(group_smarts)
-            matches = mol.GetSubstructMatches(pattern)
-            degradable_count += len(matches)
+            if pattern is not None:
+                matches = mol.GetSubstructMatches(pattern)
+                degradable_count += len(matches)
         
         # Calculate base score from number of degradable groups
         base_score = min(0.8, degradable_count * 0.2)
@@ -137,19 +207,8 @@ class PolymerGenerator:
         mw_factor = max(0, 1 - (mw / 1000))  # Normalize to 1000 g/mol
         mw_score = mw_factor * 0.2
         
-        # Environmental adjustment
-        env_factor = 0.0
-        if environment == "acidic":
-            env_factor += 0.1
-        elif environment == "basic":
-            env_factor += 0.1
-        elif environment == "reducing":
-            env_factor += 0.15
-        elif environment == "oxidizing":
-            env_factor += 0.1
-        
         # Final score
-        final_score = min(1.0, base_score + mw_score + env_factor)
+        final_score = min(1.0, base_score + mw_score)
         
         return final_score
 

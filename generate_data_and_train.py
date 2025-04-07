@@ -4,7 +4,7 @@ from backend.utils.train_model import main as train_model
 def main():
     print("Generating synthetic polymer dataset...")
     generator = PolymerDataGenerator()
-    dataset = generator.generate_dataset(num_samples=10000)
+    dataset = generator.generate_dataset(num_samples=1000)
     save_dataset(dataset)
     print("Dataset generated and saved!")
     
