@@ -1,1 +1,0 @@
-# AI-Designed-Self-Decomposing-Chemicals
