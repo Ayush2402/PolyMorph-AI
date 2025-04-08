@@ -1,3 +1,7 @@
+# Implementation drive link
+
+https://drive.google.com/file/d/10ofgnaFd9qzxDdf_olE0gPX3mGz8MPk4/view
+
 # AI Polymer System
 
 An AI-powered system for generating self-decomposing polymers with domain-specific functionality.
@@ -28,23 +32,27 @@ ai-polymer-system/
 ## Setup
 
 1. Create a virtual environment:
+
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
 2. Install dependencies:
+
 ```bash
 pip install -r requirements.txt
 ```
 
 3. Start the backend server:
+
 ```bash
 cd backend
 uvicorn main:app --reload
 ```
 
 4. Start the frontend development server:
+
 ```bash
 cd frontend
 npm install
@@ -59,4 +67,4 @@ npm run dev
 
 ## License
 
-MIT 
+MIT
