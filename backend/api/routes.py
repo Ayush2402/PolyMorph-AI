@@ -2,14 +2,22 @@ from fastapi import APIRouter, HTTPException
 from typing import List, Optional
 import json
 from pathlib import Path
+import os
 
 from models.polymer_generator import PolymerGenerator
 from models.gnn_model import DegradabilityPredictor
 from schemas.polymer import PolymerRequest, PolymerResponse, PredictionRequest, NomenclatureData
 
+# Initialize the predictor
+model_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'models', 'degradability_model.pt')
+try:
+    predictor = DegradabilityPredictor(model_path=model_path)
+except FileNotFoundError:
+    # If model file doesn't exist, initialize without it
+    predictor = DegradabilityPredictor()
+
 router = APIRouter()
 generator = PolymerGenerator()
-predictor = DegradabilityPredictor()
 
 # Initialize history file
 history_file = Path("data/history.json")

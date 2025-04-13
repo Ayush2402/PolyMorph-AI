@@ -7,26 +7,23 @@ import numpy as np
 
 class PolymerGenerator:
     def __init__(self):
-        # SMARTS patterns for matching
         self.kill_switch_groups = {
-            # Common degradable groups with valid SMARTS patterns
-            "ester": "[CX3](=O)[OX2H0]",  # C(=O)O
-            "amide": "[CX3](=O)[NX3]",    # C(=O)N
-            "acetal": "[OX2][CX4]([OX2])",  # OC(O)C
-            "hydrazone": "[CX3]=[NX2][NX3]",  # C=NN
-            "imine": "[CX3]=[NX2]",  # C=N
-            "thiol": "[SX2H]",  # SH
-            "azide": "[NX2]=[NX2]=[NX1]",  # N=N=N
-            "anhydride": "[CX3](=O)[OX2][CX3]=O",  # C(=O)OC(=O)
-            "carbonate": "[OX2][CX3](=O)[OX2]",  # OC(=O)O
-            "disulfide": "[SX2D2][SX2D2]",  # SS
-            "peroxide": "[OX2D2][OX2D2]",  # OO
-            "thioketal": "[SX2][CX4]([SX2])",  # SC(S)C
-            "boronic_ester": "[BX3]([OX2])[OX2]",  # B(O)O
-            "siloxane": "[OX2][Si][OX2]"  # OSiO
+            "ester": "[CX3](=O)[OX2H0]", 
+            "amide": "[CX3](=O)[NX3]", 
+            "acetal": "[OX2][CX4]([OX2])", 
+            "hydrazone": "[CX3]=[NX2][NX3]",
+            "imine": "[CX3]=[NX2]",
+            "thiol": "[SX2H]",
+            "azide": "[NX2]=[NX2]=[NX1]", 
+            "anhydride": "[CX3](=O)[OX2][CX3]=O", 
+            "carbonate": "[OX2][CX3](=O)[OX2]", 
+            "disulfide": "[SX2D2][SX2D2]", 
+            "peroxide": "[OX2D2][OX2D2]", 
+            "thioketal": "[SX2][CX4]([SX2])",  
+            "boronic_ester": "[BX3]([OX2])[OX2]",  
+            "siloxane": "[OX2][Si][OX2]"  
         }
         
-        # Simplified SMILES patterns for construction
         self.construction_groups = {
             "ester": "C(=O)O",
             "amide": "C(=O)N",
