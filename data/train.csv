@@ -1,0 +1,11 @@
+smiles,degradability_score
+C(=O)OC,0.8
+C(=O)NC,0.7
+C(=O)SC,0.6
+C(=O)OC(=O),0.9
+C(=O)NCC(=O)O,0.75
+C(=O)OC(=O)NC,0.85
+C(=O)SC(=O)NC,0.65
+C(=O)OC(=O)SC,0.7
+C(=O)NCC(=O)NCC(=O)O,0.8
+C(=O)OC(=O)NCC(=O)SC,0.75 

@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import os
 from pathlib import Path
 
 def run_command(command):
@@ -9,6 +10,34 @@ def run_command(command):
         print(f"Error running command: {command}")
         print(f"Error: {e}")
         sys.exit(1)
+
+def init_project():
+    # Create necessary directories
+    directories = [
+        'data/models',
+        'data/raw',
+        'data/processed',
+        'data/training',
+        'data/validation',
+        'data/test'
+    ]
+    
+    for directory in directories:
+        Path(directory).mkdir(parents=True, exist_ok=True)
+        print(f"Created directory: {directory}")
+    
+    # Create empty files if they don't exist
+    files = [
+        'data/raw/polymers.csv',
+        'data/processed/training_data.csv',
+        'data/processed/validation_data.csv',
+        'data/processed/test_data.csv'
+    ]
+    
+    for file in files:
+        if not os.path.exists(file):
+            Path(file).touch()
+            print(f"Created file: {file}")
 
 def main():
     # Create necessary directories
@@ -43,4 +72,6 @@ def main():
         print("./run.sh")
 
 if __name__ == "__main__":
-    main() 
+    init_project()
+    main()
+    print("Project initialization complete!") 
